@@ -1,7 +1,7 @@
 - 👋 Hi, I’m @Neurosecond
 - 👀 I’m interested in seamless semantic web and data vizualization
-- 🌱 I’m currently learning networking 
-- 💞️ I’m looking to collaborate on data science
+- 🌱 I’m currently doing my first RESTful service 
+- 💞️ I’m looking to collaborate on any data science topics
 - 📫 You can write me: a.buchkevich@gmail.com
 
 <!---
