@@ -1,7 +1,5 @@
 - 👋 Hi, I’m data scientist @Neurosecond
-- 👀 I’m interested in seamless semantic web and structured data vizualization
 - 🌱 I’m currently generalizing my previous experience with ETL on Python 
-- 💞️ I’m looking to collaborating on newest ancient civilizations' investigations
 - 📫 You can write me: a.buchkevich@gmail.com
 
 <!---
