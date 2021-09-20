@@ -32,13 +32,13 @@ def initalise_mongo():
     return MongoClient(config.MONGO_HOST, config.MONGO_PORT)[config.MONGO_DB]
 
 def extract_data(mysql_cursor):
-    """Given a cursor, extracts data from MySQL sample dataset and returns all the tables with their data"""
-    one = execute_mysql_query('select * from one', mysql_cursor, 'fetchall')
-    two = execute_mysql_query('select * from two', mysql_cursor, 'fetchall')
-    three = execute_mysql_query('select * from three', mysql_cursor, 'fetchall')
-    four = execute_mysql_query('select * from four', mysql_cursor, 'fetchall')
-    five = execute_mysql_query('select * from five', mysql_cursor, 'fetchall')
-    tables = (one, two, three, four, five)
+    """Given a cursor, extracts data from MySQL dataset and returns all the tables with their data"""
+    topics = execute_mysql_query('select * from topics', mysql_cursor, 'fetchall')
+    article_topics = execute_mysql_query('select * from article_topics', mysql_cursor, 'fetchall')
+    ratings = execute_mysql_query('select * from ratings', mysql_cursor, 'fetchall')
+    users = execute_mysql_query('select * from users', mysql_cursor, 'fetchall')
+    articles = execute_mysql_query('select * from articles', mysql_cursor, 'fetchall')
+    tables = (topics, article_topics, ratings, users, articles)
     return tables
 
 def execute_mysql_query(sql, cursor, query_type):
@@ -56,34 +56,34 @@ def transform_data(dataset, table):
     """Transforms the data to load it into mongoDB, returns a JSON object"""
     dataset_collection = []
     tmp_collection = {}
-    if table == "genres":
+    if table == "topics":
         for item in dataset[0]:
             tmp_collection['_id'] = item[0]
-            tmp_collection['genre'] = item[1]
+            tmp_collection['topic'] = item[1]
             dataset_collection.append(copy.copy(tmp_collection))
         return dataset_collection
     elif table == "users":
         for item in dataset[3]:
             tmp_collection['_id'] = item[0]
             tmp_collection['age'] = item[1]
-            tmp_collection['gender'] = item[2]
-            tmp_collection['occupatin'] = item[3]
+            tmp_collection['topic'] = item[2]
+            tmp_collection['occupatein'] = item[3]
             tmp_collection['zip_code'] = item[4]
             dataset_collection.append(copy.copy(tmp_collection))
         return dataset_collection
-    elif table == "movies":
+    elif table == "articles":
         for item in dataset[4]:
             tmp_collection['_id'] = item[0]
             tmp_collection['title'] = item[1]
             tmp_collection['release_date'] = item[2]
-            tmp_collection['video'] = item[3]
-            tmp_collection['IMDBURL'] = item[4]
-            # embedding movie genres
-            movie_genres_collection = []
-            for movie_genres_item in dataset[1]:
-                if movie_genres_item[0] == tmp_collection['_id']:
-                    movie_genres_collection.append(copy.copy(movie_genres_item[1]))
-            tmp_collection['genres'] = movie_genres_collection
+            tmp_collection['body'] = item[3]
+            tmp_collection['URL'] = item[4]
+            # embedding article topics
+            article_topics_collection = []
+            for article_topics_item in dataset[1]:
+                if article_topics_item[0] == tmp_collection['_id']:
+                    article_topics_collection.append(copy.copy(article_topics_item[1]))
+            tmp_collection['topics'] = article_topics_collection
             # embedding ratings
             ratings_collection = []
             for ratings_item in dataset[2]:
@@ -91,7 +91,7 @@ def transform_data(dataset, table):
                     tmp_ratings_collection = {}
                     tmp_ratings_collection['user_id'] = ratings_item[0]
                     tmp_ratings_collection['rating'] = ratings_item[2]
-                    tmp_ratings_collection['timestamp'] = ratings_item[3]
+                    tmp_ratings_collection['hirschindex'] = ratings_item[3]
                     ratings_collection.append(copy.copy(tmp_ratings_collection))
             tmp_collection['ratings'] = ratings_collection
             dataset_collection.append(copy.copy(tmp_collection))
@@ -104,8 +104,7 @@ def load_data(mongo_collection, dataset_collection):
     return mongo_collection.insert_many(dataset_collection)
 
 def main():
-    """main method starts a pipeline, extracts data,
-    transforms it and loads it into a mongo client"""
+    """main method starts a pipeline, extracts data, transforms it and loads it into a mongo client"""
     if PRINT_INFO:
         print('Starting data pipeline')
         print('Initialising MySQL connection')
@@ -120,18 +119,18 @@ def main():
     if PRINT_INFO:
         print('Stage 1 completed! Data successfully extracted from MySQL')
         print('Starting data pipeline stage 2: Transforming data from MySQL for MongoDB')
-        print('Transforming genres dataset')
-    genres_collection = transform_data(mysql_data, "genres")
+        print('Transforming topics dataset')
+    genres_collection = transform_data(mysql_data, "topics")
     
     if PRINT_INFO:
-        print('Successfully transformed genres dataset')
+        print('Successfully transformed topics dataset')
         print('Transforming users dataset')
     users_collection = transform_data(mysql_data, "users")
     
     if PRINT_INFO:
         print('Successfully transformed users dataset')
-        print('Transforming movies dataset')
-    movies_collection = transform_data(mysql_data, "movies")
+        print('Transforming articles dataset')
+    articles_collection = transform_data(mysql_data, "articles")
     
     if PRINT_INFO:
         print('Successfully transformed users dataset')
@@ -142,17 +141,17 @@ def main():
     if PRINT_INFO:
         print('MongoDB connection Completed')
         print('Starting data pipeline stage 3: Loading data into MongoDB')
-    result = load_data(mongo['genres'], genres_collection)
+    result = load_data(mongo['topics'], topics_collection)
     
     if PRINT_RESULTS:
-        print('Successfully loaded genres')
+        print('Successfully loaded topics')
         print(result)
     result = load_data(mongo['users'], users_collection)
     
     if PRINT_RESULTS:
         print('Successfully loaded users')
         print(result)
-    result = load_data(mongo['movies'], movies_collection)
+    result = load_data(mongo['articles'], articles_collection)
     
     if PRINT_RESULTS:
         print('Successfully loaded users')
@@ -162,6 +161,7 @@ def main():
         print('Stage 3 completed! Data successfully loaded')
         print('Closing MySQL connection')
     mysql.close()
+    
     if PRINT_INFO:
         print('MySQL connection closed successfully')
         print('Ending data pipeline')
